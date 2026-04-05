@@ -13,7 +13,7 @@ from quantkit.backtest.strategies import dca_signals, ma_cross_signals
 from quantkit.config import load_config, save_config
 from quantkit.data.provider import get_fundamentals, get_ohlcv
 from quantkit.factor.engine import compute_factors
-from quantkit.portfolio import clear_positions, import_csv, list_positions
+from quantkit.portfolio import clear_positions, detect_and_import, list_positions
 from quantkit.risk.engine import (
     compute_concentration,
     compute_correlation_matrix,
@@ -73,21 +73,27 @@ def main() -> None:
 
 def _menu_factor_check() -> None:
     console.clear()
-    console.print(Panel("Factor Check", style="bold cyan"))
-    mode = Prompt.ask("[1] Single stock  [2] All positions", choices=["1", "2"], default="1")
+    while True:
+        console.print(Panel("Factor Check", style="bold cyan"))
+        mode = Prompt.ask(
+            "[1] Single stock  [2] All positions  [0] Back",
+            choices=["0", "1", "2", "back"],
+            default="1",
+        )
 
-    if mode == "1":
-        symbol = Prompt.ask("Stock symbol (e.g. AAPL or 600519.SH)").strip().upper()
-        _run_factor_check([symbol])
-    else:
+        if mode in {"0", "back"}:
+            return
+        if mode == "1":
+            symbol = Prompt.ask("Stock symbol (e.g. AAPL or 600519.SH)").strip().upper()
+            _run_factor_check([symbol])
+            continue
+
         positions = list_positions()
         if not positions:
             _error("No positions found. Import a CSV first via Portfolio menu.")
-            _pause()
-            return
+            continue
         symbols = list({position["symbol"] for position in positions})
         _run_factor_check(symbols)
-    _pause()
 
 
 def _run_factor_check(symbols: list[str]) -> None:
@@ -140,53 +146,63 @@ def _display_factor_table(symbol: str, factors: dict) -> None:
 
 
 def _menu_backtest() -> None:
-    console.clear()
-    console.print(Panel("Strategy Backtest", style="bold cyan"))
-    console.print("[bold][1][/bold] MA Cross (short/long moving average crossover)")
-    console.print("[bold][2][/bold] DCA (dollar-cost averaging / monthly fixed buy)")
-    strategy = Prompt.ask("Choose strategy", choices=["1", "2"], default="1")
-    symbol = Prompt.ask("Stock symbol").strip().upper()
-
-    from datetime import date, timedelta
-
-    default_start = (date.today() - timedelta(days=3 * 365)).isoformat()
-    default_end = date.today().isoformat()
-    start = Prompt.ask("Start date", default=default_start)
-    end = Prompt.ask("End date", default=default_end)
-
-    cfg = load_config()
-    capital = cfg["default_capital"]
-    slippage = cfg["slippage_bps"]
-    commission = cfg["commission_bps"]
-
-    try:
-        console.print(f"\n[bold]Fetching data for {symbol}...[/bold]")
-        ohlcv = get_ohlcv(symbol, start, end)
-        if ohlcv.empty:
-            _error(f"No data for {symbol}")
-            _pause()
+    while True:
+        console.clear()
+        console.print(Panel("Strategy Backtest", style="bold cyan"))
+        console.print("[bold][1][/bold] MA Cross (short/long moving average crossover)")
+        console.print("[bold][2][/bold] DCA (dollar-cost averaging / monthly fixed buy)")
+        console.print("[bold][3][/bold] Low PE (低估值买入)")
+        console.print("[bold][0][/bold] Back")
+        strategy = Prompt.ask("Choose strategy", choices=["0", "1", "2", "3", "back"], default="1")
+        if strategy in {"0", "back"}:
             return
+        if strategy == "3":
+            console.print("Low PE 策略需要历史 PE 数据，暂未支持，敬请期待")
+            _pause()
+            continue
 
-        if strategy == "1":
-            signals = ma_cross_signals(ohlcv, short_window=5, long_window=20)
-            strategy_name = "MA Cross (5/20)"
-        else:
-            signals = dca_signals(ohlcv, day_of_month=1)
-            strategy_name = "DCA (Monthly)"
+        symbol = Prompt.ask("请输入股票代码 (e.g. AAPL, 600519.SH)").strip().upper()
 
-        result = run_backtest(
-            ohlcv,
-            signals,
-            capital=capital,
-            slippage_bps=slippage,
-            commission_bps=commission,
-        )
-        metrics = compute_metrics(result["equity_curve"], result["trades"])
+        from datetime import date, timedelta
 
-        _display_backtest_result(symbol, strategy_name, ohlcv, result, metrics, capital)
-    except Exception as exc:
-        _error(str(exc))
-    _pause()
+        default_start = (date.today() - timedelta(days=3 * 365)).isoformat()
+        default_end = date.today().isoformat()
+        start = Prompt.ask("Start date", default=default_start)
+        end = Prompt.ask("End date", default=default_end)
+
+        cfg = load_config()
+        capital = cfg["default_capital"]
+        slippage = cfg["slippage_bps"]
+        commission = cfg["commission_bps"]
+
+        try:
+            console.print(f"\n[bold]Fetching data for {symbol}...[/bold]")
+            ohlcv = get_ohlcv(symbol, start, end)
+            if ohlcv.empty:
+                _error(f"No data for {symbol}")
+                _pause()
+                continue
+
+            if strategy == "1":
+                signals = ma_cross_signals(ohlcv, short_window=5, long_window=20)
+                strategy_name = "MA Cross (5/20)"
+            else:
+                signals = dca_signals(ohlcv, day_of_month=1)
+                strategy_name = "DCA (Monthly)"
+
+            result = run_backtest(
+                ohlcv,
+                signals,
+                capital=capital,
+                slippage_bps=slippage,
+                commission_bps=commission,
+            )
+            metrics = compute_metrics(result["equity_curve"], result["trades"])
+
+            _display_backtest_result(symbol, strategy_name, ohlcv, result, metrics, capital)
+        except Exception as exc:
+            _error(str(exc))
+        _pause()
 
 
 def _display_backtest_result(
@@ -351,83 +367,102 @@ def _menu_risk_lens() -> None:
 
 
 def _menu_portfolio() -> None:
-    console.clear()
-    console.print(Panel("Portfolio Management", style="bold cyan"))
-    console.print("[bold][1][/bold] Import CSV")
-    console.print("[bold][2][/bold] View positions")
-    console.print("[bold][3][/bold] Clear all positions")
-    console.print("[bold][0][/bold] Back")
-    choice = Prompt.ask("Choose", choices=["0", "1", "2", "3"], default="0")
+    while True:
+        console.clear()
+        console.print(Panel("Portfolio Management", style="bold cyan"))
+        console.print("[bold][1][/bold] Import CSV")
+        console.print("[bold][2][/bold] View positions")
+        console.print("[bold][3][/bold] Clear all positions")
+        console.print("[bold][0][/bold] Back")
+        choice = Prompt.ask("Choose", choices=["0", "1", "2", "3", "back"], default="0")
 
-    if choice == "1":
-        path = Prompt.ask("CSV file path").strip()
-        try:
-            count = import_csv(Path(path))
-            console.print(f"[green]Imported {count} positions.[/green]")
-        except Exception as exc:
-            _error(str(exc))
-    elif choice == "2":
-        positions = list_positions()
-        if not positions:
-            console.print("[dim]No positions yet.[/dim]")
-        else:
-            table = Table(title="Positions", show_lines=True)
-            table.add_column("Symbol", style="bold")
-            table.add_column("Buy Date")
-            table.add_column("Buy Price", justify="right")
-            table.add_column("Quantity", justify="right")
-            table.add_column("Market")
-            for position in positions:
-                table.add_row(
-                    position["symbol"],
-                    position["buy_date"],
-                    f"{position['buy_price']:.2f}",
-                    f"{position['quantity']:.0f}",
-                    position["market"],
-                )
-            console.print(table)
-    elif choice == "3":
+        if choice in {"0", "back"}:
+            return
+        if choice == "1":
+            console.print("支持格式: QuantKit CSV 或 IBKR 交易记录导出")
+            console.print("QuantKit CSV 格式: symbol,buy_date,buy_price,quantity,market")
+            path = Prompt.ask("CSV file path").strip()
+            try:
+                count, format_name = detect_and_import(Path(path))
+                console.print(f"[green]Detected format: {format_name}[/green]")
+                console.print(f"[green]Imported {count} positions.[/green]")
+            except Exception as exc:
+                _error(str(exc))
+            _pause()
+            continue
+        if choice == "2":
+            positions = list_positions()
+            if not positions:
+                console.print("[dim]No positions yet.[/dim]")
+            else:
+                table = Table(title="Positions", show_lines=True)
+                table.add_column("Symbol", style="bold")
+                table.add_column("Buy Date")
+                table.add_column("Buy Price", justify="right")
+                table.add_column("Quantity", justify="right")
+                table.add_column("Market")
+                for position in positions:
+                    table.add_row(
+                        position["symbol"],
+                        position["buy_date"],
+                        f"{position['buy_price']:.2f}",
+                        f"{position['quantity']:.0f}",
+                        position["market"],
+                    )
+                console.print(table)
+            _pause()
+            continue
+
         confirm = Prompt.ask("Delete all positions?", choices=["y", "n"], default="n")
         if confirm == "y":
             clear_positions()
             console.print("[green]All positions cleared.[/green]")
-    _pause()
+        _pause()
 
 
 def _menu_settings() -> None:
-    console.clear()
-    console.print(Panel("Settings", style="bold cyan"))
-    cfg = load_config()
-    table = Table(show_lines=True)
-    table.add_column("Setting", style="bold")
-    table.add_column("Current Value")
-    table.add_row("Tushare Token", cfg["tushare_token"] or "[dim]not set[/dim]")
-    table.add_row("Default Capital", f"{cfg['default_capital']:,}")
-    table.add_row("Slippage (bps)", str(cfg["slippage_bps"]))
-    table.add_row("Commission (bps)", str(cfg["commission_bps"]))
-    console.print(table)
+    while True:
+        console.clear()
+        console.print(Panel("Settings", style="bold cyan"))
+        cfg = load_config()
+        table = Table(show_lines=True)
+        table.add_column("Setting", style="bold")
+        table.add_column("Current Value")
+        table.add_row("Tushare Token", cfg["tushare_token"] or "[dim]not set[/dim]")
+        table.add_row("Default Capital", f"{cfg['default_capital']:,}")
+        table.add_row("Slippage (bps)", str(cfg["slippage_bps"]))
+        table.add_row("Commission (bps)", str(cfg["commission_bps"]))
+        console.print(table)
 
-    console.print("\n[bold][1][/bold] Set Tushare Token")
-    console.print("[bold][2][/bold] Set Default Capital")
-    console.print("[bold][3][/bold] Set Slippage")
-    console.print("[bold][4][/bold] Set Commission")
-    console.print("[bold][0][/bold] Back")
-    choice = Prompt.ask("Choose", choices=["0", "1", "2", "3", "4"], default="0")
+        console.print("\n[bold][1][/bold] Set Tushare Token")
+        console.print("[bold][2][/bold] Set Default Capital")
+        console.print("[bold][3][/bold] Set Slippage")
+        console.print("[bold][4][/bold] Set Commission")
+        console.print("[bold][0][/bold] Back")
+        choice = Prompt.ask("Choose", choices=["0", "1", "2", "3", "4", "back"], default="0")
 
-    if choice == "1":
-        cfg["tushare_token"] = Prompt.ask("Tushare Token")
-        save_config(cfg)
-        console.print("[green]Saved.[/green]")
-    elif choice == "2":
-        cfg["default_capital"] = IntPrompt.ask("Default Capital", default=cfg["default_capital"])
-        save_config(cfg)
-        console.print("[green]Saved.[/green]")
-    elif choice == "3":
-        cfg["slippage_bps"] = IntPrompt.ask("Slippage (bps)", default=cfg["slippage_bps"])
-        save_config(cfg)
-        console.print("[green]Saved.[/green]")
-    elif choice == "4":
+        if choice in {"0", "back"}:
+            return
+        if choice == "1":
+            cfg["tushare_token"] = Prompt.ask("Tushare Token")
+            save_config(cfg)
+            console.print("[green]Saved.[/green]")
+            _pause()
+            continue
+        if choice == "2":
+            cfg["default_capital"] = IntPrompt.ask("Default Capital", default=cfg["default_capital"])
+            save_config(cfg)
+            console.print("[green]Saved.[/green]")
+            _pause()
+            continue
+        if choice == "3":
+            cfg["slippage_bps"] = IntPrompt.ask("Slippage (bps)", default=cfg["slippage_bps"])
+            save_config(cfg)
+            console.print("[green]Saved.[/green]")
+            _pause()
+            continue
+
         cfg["commission_bps"] = IntPrompt.ask("Commission (bps)", default=cfg["commission_bps"])
         save_config(cfg)
         console.print("[green]Saved.[/green]")
-    _pause()
+        _pause()

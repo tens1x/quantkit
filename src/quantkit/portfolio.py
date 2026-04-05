@@ -61,6 +61,47 @@ def import_csv(path: Path) -> int:
     return count
 
 
+def import_ibkr_csv(path: Path) -> int:
+    """Import buy transactions from an IBKR export CSV file."""
+    conn = _get_conn()
+    count = 0
+    with open(path, newline="") as f:
+        reader = csv.reader(f)
+        for row in reader:
+            if len(row) <= 9:
+                continue
+            if row[0].strip() != "Transaction History" or row[1].strip() != "Data":
+                continue
+            if row[5].strip() != "买":
+                continue
+
+            market = "US" if row[9].strip() == "USD" else "CN"
+            conn.execute(
+                "INSERT INTO positions (symbol, buy_date, buy_price, quantity, market) "
+                "VALUES (?, ?, ?, ?, ?)",
+                (
+                    row[6].strip(),
+                    row[2].strip(),
+                    float(row[8].strip()),
+                    float(row[7].strip()),
+                    market,
+                ),
+            )
+            count += 1
+    conn.commit()
+    return count
+
+
+def detect_and_import(path: Path) -> tuple[int, str]:
+    """Detect CSV format and import positions."""
+    with open(path, newline="") as f:
+        first_line = f.readline().lstrip("\ufeff")
+
+    if first_line.startswith("Statement,") or "Transaction History" in first_line:
+        return import_ibkr_csv(path), "IBKR"
+    return import_csv(path), "QuantKit CSV"
+
+
 def list_positions() -> list[dict]:
     """Return all positions as a list of dicts."""
     conn = _get_conn()
