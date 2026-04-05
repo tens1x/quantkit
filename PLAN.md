@@ -1,36 +1,126 @@
-# QuantKit Implementation Plan
+# QuantKit — 执行计划
 
-终端版个人投资工具包，面向同时交易 A 股和美股的个人投资者。学习和反思工具，不是自动交易系统。
+这是项目的**行动入口**。打开这个文件，你就知道下一步该做什么。
 
-## Milestones
+---
 
-- [x] Phase 1: Infrastructure & Data Layer (Tasks 1-4)
-- [x] Phase 2: Portfolio & Analysis Engines (Tasks 5-8)
-- [x] Phase 3: CLI & Integration (Tasks 9-10)
-- [x] Phase 4: Documentation (Task 11)
-- [x] Phase 5: UX Improvements (IBKR CSV, submenu loops, prompts)
+## 两条主线
 
-## Tasks
+QuantKit 有两条并行的工作线，交替推进：
 
-| Task | Status | Tests | Implementer |
-|------|--------|-------|-------------|
-| 1. Project Scaffold | ✅ | - | Codex CLI |
-| 2. Settings & Config | ✅ | 3 | Codex CLI |
-| 3. SQLite Cache Layer | ✅ | 4 | Codex CLI |
-| 4. Data Provider | ✅ | 4 | Codex CLI |
-| 5. Portfolio Management | ✅ | 5 | Codex CLI |
-| 6. Factor Check Engine | ✅ | 12 | Codex CLI |
-| 7. Backtest Engine | ✅ | 4 | Codex CLI |
-| 8. Risk Lens Engine | ✅ | 4 | Codex CLI |
-| 9. CLI Menu System | ✅ | - | Codex CLI |
-| 10. Integration Test | ✅ | 1 | Codex CLI |
-| 11. Documentation | ✅ | - | Claude Code |
-| UX Fix: Submenu loops + IBKR CSV + prompts | ✅ | +2 | Codex CLI |
+### 主线 A：月度投资复盘（持续执行）
 
-**Total: 37 tests, all passing.**
+每月至少一次。目的是建立投资纪律，用数据替代直觉。
 
-## Team
+### 主线 B：研究驱动的功能迭代（按需执行）
 
-- **Claude Code**: Architect & PM — design, plan, review, test, commit, documentation
-- **Codex CLI**: Developer — all code implementation
-- **Gemini CLI**: QA & Documentation — attempted doc generation (tool limitations)
+读论文 → 提炼策略 → 编码实现 → 回测验证。目的是让工具越来越强。
+
+---
+
+## 主线 A：月度复盘 Checklist
+
+**触发条件：** 每月第一个周末，或任何一次交易之后
+
+打开终端，运行 `uv run python -m quantkit`，按顺序执行：
+
+### Step 1: 更新持仓
+- [ ] 从 IBKR 导出最新的 Transaction History CSV
+- [ ] Portfolio → Import CSV → 导入文件
+- [ ] Portfolio → View positions → 确认持仓正确
+- [ ] 如果有误，Clear all → 重新导入
+
+### Step 2: 因子体检
+- [ ] Factor Check → All positions
+- [ ] 对每只持仓，回答三个问题（记录在 `research/notes/YYYY-MM-review.md`）：
+  - 我为什么买了这只？理由还成立吗？
+  - 有红灯吗？我接受这个风险吗？为什么？
+  - 有没有新信息改变了我的判断？
+
+### Step 3: 风险审视
+- [ ] Risk Lens → 查看四个维度
+- [ ] 集中度：有单只超过 30% 吗？需要减仓吗？
+- [ ] 相关性：持仓之间是不是太像了？需要分散吗？
+- [ ] 波动贡献：风险主要来自哪只？我清楚吗？
+- [ ] 最大回撤：这个数字我睡得着觉吗？
+
+### Step 4: 策略验证（可选，有新想法时做）
+- [ ] Strategy Backtest → 测试你想用的策略
+- [ ] 记录：这个策略跑赢 Buy & Hold 了吗？
+- [ ] 记录：最大回撤你能接受吗？
+
+### Step 5: 写复盘笔记
+- [ ] 在 `research/notes/YYYY-MM-review.md` 写下：
+  - 本月操作了什么？为什么？
+  - Factor Check 和 Risk Lens 告诉我什么？
+  - 下个月我要做什么？不做什么？
+  - 有没有需要深入研究的问题？（转入主线 B）
+
+---
+
+## 主线 B：研究 → 实现 Pipeline
+
+**触发条件：** 读到一篇论文 / 一个策略想法 / 复盘中发现需要新功能
+
+### Phase 1: 研究（你来做）
+- [ ] 读论文或文章
+- [ ] 写笔记 → `research/papers/YYYY-MM-DD-标题.md`（用模板）
+- [ ] 提炼策略想法 → `research/strategies/策略名.md`（用模板）
+- [ ] 确认：这个策略值得实现吗？需要什么数据？
+
+### Phase 2: 设计（Claude Code 来做）
+- [ ] 把策略文档喂给 Claude Code
+- [ ] Claude Code 出设计方案：需要改哪些模块、加什么接口
+- [ ] 你确认方案 OK
+
+### Phase 3: 实现（Codex 来做）
+- [ ] Claude Code 把任务拆成 tasks 交给 Codex
+- [ ] Codex 写代码 + 写测试
+- [ ] Claude Code review + 跑测试
+- [ ] 全部测试通过 → commit + push
+
+### Phase 4: 验证（你来做）
+- [ ] 用 QuantKit 跑新策略的回测
+- [ ] 对比已有策略，记录结果 → `research/notes/`
+- [ ] 这个策略有用吗？留下还是弃掉？
+
+---
+
+## 分工表
+
+谁在什么时候干什么，不用每次重新商量。
+
+| 角色 | 职责 | 什么时候出场 |
+|------|------|-------------|
+| **你** | 读论文、写笔记、做月度复盘、最终决策 | 始终 |
+| **Claude Code** | 设计方案、拆任务、review、跑测试、写文档、commit | Phase 2-3 |
+| **Codex CLI** | 写代码、写测试 | Phase 3 |
+| **Gemini CLI** | 辅助分析、第二视角 review | 按需 |
+
+**铁律：**
+1. Claude Code 不写实现代码，只做 plan/review/test/commit
+2. Codex 不做设计决策，只执行明确的 task
+3. 每次改代码必须有测试，测试必须通过才能 commit
+4. 每次 commit 必须 push 到 GitHub
+
+---
+
+## 已完成的里程碑
+
+| Phase | 内容 | 状态 | 日期 |
+|-------|------|------|------|
+| v0.1 | 基础架构 + 数据层 | ✅ | 2026-04-05 |
+| v0.1 | 因子/回测/风险三大引擎 | ✅ | 2026-04-05 |
+| v0.1 | CLI 菜单系统 | ✅ | 2026-04-05 |
+| v0.1 | 文档 + 测试 (37 tests) | ✅ | 2026-04-06 |
+| v0.1.1 | UX 修复: IBKR CSV, 子菜单循环, 提示优化 | ✅ | 2026-04-06 |
+
+## 待办（Backlog）
+
+按优先级排序，从主线 B 的研究中产生新条目：
+
+| # | 功能 | 来源 | 状态 |
+|---|------|------|------|
+| 1 | Low PE 策略实现（需要历史 PE 时间序列数据） | 设计 spec | 待研究数据来源 |
+| 2 | 买卖净额化（IBKR 导入计算真实持仓而非只看买单） | 用户反馈 | 待实现 |
+| 3 | ？ | 等你喂论文... | |
