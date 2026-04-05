@@ -1,0 +1,1 @@
+"""QuantKit - Personal investment toolkit."""
