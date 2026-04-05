@@ -1,8 +1,5 @@
 """Tests for config module."""
 
-import json
-import os
-from pathlib import Path
 
 from quantkit.config import get_data_dir, load_config, save_config
 

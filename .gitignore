@@ -6,3 +6,5 @@ build/
 .venv/
 *.db
 .DS_Store
+.runtime/
+uv.lock

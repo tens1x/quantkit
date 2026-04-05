@@ -1,10 +1,11 @@
 """Tests for backtest engine."""
 
-import pandas as pd
 from datetime import date, timedelta
 
-from quantkit.backtest.engine import run_backtest, compute_metrics
-from quantkit.backtest.strategies import ma_cross_signals, dca_signals
+import pandas as pd
+
+from quantkit.backtest.engine import compute_metrics, run_backtest
+from quantkit.backtest.strategies import dca_signals, ma_cross_signals
 
 
 def _make_ohlcv(n: int = 100, base: float = 100.0, trend: float = 0.1) -> pd.DataFrame:

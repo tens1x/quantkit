@@ -66,7 +66,10 @@ def compute_metrics(equity: pd.Series, trades: list[dict], days: int = 252) -> d
 
     # Sharpe
     returns = equity.pct_change().dropna()
-    sharpe = (returns.mean() / returns.std() * np.sqrt(days)) if len(returns) > 1 and returns.std() > 0 else 0
+    if len(returns) > 1 and returns.std() > 0:
+        sharpe = returns.mean() / returns.std() * np.sqrt(days)
+    else:
+        sharpe = 0
 
     # Max drawdown
     cummax = equity.cummax()

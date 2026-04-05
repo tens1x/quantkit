@@ -1,14 +1,13 @@
 """Unified data provider with auto-routing and caching."""
 
 import re
-from typing import Optional
 
 import pandas as pd
 
 from quantkit.data import tushare_src, yfinance_src
 from quantkit.data.cache import OHLCVCache
 
-_cache_instance: Optional[OHLCVCache] = None
+_cache_instance: OHLCVCache | None = None
 
 
 def _get_cache() -> OHLCVCache:

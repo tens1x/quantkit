@@ -3,11 +3,10 @@
 import csv
 import sqlite3
 from pathlib import Path
-from typing import Optional
 
 from quantkit.config import get_data_dir
 
-_conn: Optional[sqlite3.Connection] = None
+_conn: sqlite3.Connection | None = None
 
 
 def _get_conn() -> sqlite3.Connection:

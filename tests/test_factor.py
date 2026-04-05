@@ -1,8 +1,8 @@
 """Tests for factor check engine."""
 
-import pandas as pd
 from datetime import date, timedelta
-from unittest.mock import patch
+
+import pandas as pd
 
 from quantkit.factor.engine import compute_factors, rate_factor
 

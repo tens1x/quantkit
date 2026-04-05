@@ -4,7 +4,6 @@ import json
 import sqlite3
 from datetime import date, timedelta
 from pathlib import Path
-from typing import Optional
 
 import pandas as pd
 
@@ -14,7 +13,7 @@ from quantkit.config import get_data_dir
 class OHLCVCache:
     """Cache OHLCV and fundamentals data in SQLite."""
 
-    def __init__(self, db_path: Optional[Path] = None):
+    def __init__(self, db_path: Path | None = None):
         if db_path is None:
             db_path = get_data_dir() / "data.db"
         self._conn = sqlite3.connect(str(db_path))
@@ -60,7 +59,7 @@ class OHLCVCache:
             )
         self._conn.commit()
 
-    def load_ohlcv(self, symbol: str, start: str, end: str) -> Optional[pd.DataFrame]:
+    def load_ohlcv(self, symbol: str, start: str, end: str) -> pd.DataFrame | None:
         """Load OHLCV data from cache. Returns None if no data found."""
         cursor = self._conn.execute(
             "SELECT date, open, high, low, close, volume FROM ohlcv "
@@ -85,7 +84,7 @@ class OHLCVCache:
         )
         self._conn.commit()
 
-    def load_fundamentals(self, symbol: str, max_age_days: int = 7) -> Optional[dict]:
+    def load_fundamentals(self, symbol: str, max_age_days: int = 7) -> dict | None:
         """Load fundamentals from cache. Returns None if expired or missing."""
         cursor = self._conn.execute(
             "SELECT fetch_date, data FROM fundamentals WHERE symbol = ?",

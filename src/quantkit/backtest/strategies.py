@@ -1,7 +1,7 @@
 """Built-in backtest strategies. Each returns a signal Series (1=long, 0=flat)."""
 
-import pandas as pd
 import numpy as np
+import pandas as pd
 
 
 def ma_cross_signals(

@@ -1,12 +1,12 @@
 """Factor check engine: compute and rate 6 factors."""
 
+
 import numpy as np
 import pandas as pd
-from typing import Optional
 
 
 def rate_factor(
-    name: str, value: Optional[float], percentile: Optional[float] = None
+    name: str, value: float | None, percentile: float | None = None
 ) -> tuple[str, str]:
     """Rate a factor value. Returns (color, label)."""
     if value is None:
@@ -59,7 +59,7 @@ def rate_factor(
     return ("yellow", "Unknown")
 
 
-def _annualized_volatility(closes: pd.Series, window: int = 60) -> Optional[float]:
+def _annualized_volatility(closes: pd.Series, window: int = 60) -> float | None:
     """Calculate annualized volatility from last N days of close prices."""
     if len(closes) < window:
         return None
@@ -68,11 +68,11 @@ def _annualized_volatility(closes: pd.Series, window: int = 60) -> Optional[floa
     return float(returns.std() * np.sqrt(252))
 
 
-def _momentum(closes: pd.Series, window: int = 20) -> Optional[float]:
+def _momentum(closes: pd.Series, window: int = 20) -> float | None:
     """Calculate momentum as % change over last N days."""
     if len(closes) < window:
         return None
-    return float((closes.iloc[-1] / closes.iloc[-window] - 1))
+    return float(closes.iloc[-1] / closes.iloc[-window] - 1)
 
 
 def compute_factors(ohlcv: pd.DataFrame, fundamentals: dict) -> dict:

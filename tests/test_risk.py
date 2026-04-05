@@ -1,14 +1,15 @@
 """Tests for risk lens engine."""
 
-import pandas as pd
-import numpy as np
 from datetime import date, timedelta
+
+import numpy as np
+import pandas as pd
 
 from quantkit.risk.engine import (
     compute_concentration,
     compute_correlation_matrix,
-    compute_volatility_contribution,
     compute_max_drawdown,
+    compute_volatility_contribution,
 )
 
 

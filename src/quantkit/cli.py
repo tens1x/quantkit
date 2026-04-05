@@ -338,7 +338,9 @@ def _menu_risk_lens() -> None:
     if len(returns_dict) >= 2:
         console.print("\n[bold underline]3. Volatility Contribution[/bold underline]")
         total_market_value = sum(market_values.values())
-        weights = {symbol: market_value / total_market_value for symbol, market_value in market_values.items()}
+        weights = {
+            sym: mv / total_market_value for sym, mv in market_values.items()
+        }
         returns_df = pd.DataFrame(returns_dict)
         vol_contribution = compute_volatility_contribution(returns_df, weights)
         vol_table = Table(show_lines=True)
@@ -354,7 +356,9 @@ def _menu_risk_lens() -> None:
     console.print("\n[bold underline]4. Historical Drawdown[/bold underline]")
     returns_df = pd.DataFrame(returns_dict)
     total_market_value = sum(market_values.values())
-    weights = pd.Series({symbol: market_values[symbol] / total_market_value for symbol in returns_df.columns})
+    weights = pd.Series({
+        sym: market_values[sym] / total_market_value for sym in returns_df.columns
+    })
     portfolio_returns = (returns_df * weights).sum(axis=1)
     portfolio_equity = (1 + portfolio_returns).cumprod() * total_market_value
     drawdown = compute_max_drawdown(portfolio_equity)
@@ -450,7 +454,9 @@ def _menu_settings() -> None:
             _pause()
             continue
         if choice == "2":
-            cfg["default_capital"] = IntPrompt.ask("Default Capital", default=cfg["default_capital"])
+            cfg["default_capital"] = IntPrompt.ask(
+                "Default Capital", default=cfg["default_capital"]
+            )
             save_config(cfg)
             console.print("[green]Saved.[/green]")
             _pause()
