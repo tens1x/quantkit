@@ -1,0 +1,35 @@
+name: 巴菲特
+name_en: buffett
+philosophy: "寻找具有持久竞争优势的企业，以合理价格买入"
+
+rules:
+  - factor: pe
+    op: "<"
+    threshold: 20
+    weight: 3
+    hit: "PE 低于 20，估值在合理范围"
+    miss: "PE 偏高，巴菲特可能会等更好的价格"
+
+  - factor: roe
+    op: ">"
+    threshold: 0.15
+    weight: 3
+    hit: "ROE 优秀，资本回报能力强"
+    miss: "ROE 不够理想，企业赚钱效率一般"
+
+  - factor: revenue_growth
+    op: ">"
+    threshold: 0.05
+    weight: 2
+    hit: "营收保持增长"
+    miss: "营收增长乏力"
+
+  - factor: volatility
+    op: "<"
+    threshold: 0.30
+    weight: 1
+    hit: "波动不大，适合长期持有"
+    miss: "波动偏大，不太像巴菲特偏好的稳健标的"
+
+buy_threshold: 0.7
+watch_threshold: 0.4
