@@ -10,7 +10,6 @@ from typing import Any
 
 import yaml
 
-
 VALID_FACTORS = {"pe", "pb", "roe", "revenue_growth", "volatility", "momentum"}
 VALID_OPS = {"<", ">", "<=", ">="}
 OP_MAP = {

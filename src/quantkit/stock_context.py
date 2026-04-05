@@ -29,7 +29,7 @@ class StockContext:
         self._factors_cache: dict | None = None
 
     @classmethod
-    def load(cls, symbol: str) -> "StockContext":
+    def load(cls, symbol: str) -> StockContext:
         """Load 1y OHLCV + fundamentals. Raises ValueError if OHLCV empty."""
         end = date.today().isoformat()
         start = (date.today() - timedelta(days=365)).isoformat()
