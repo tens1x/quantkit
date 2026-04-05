@@ -27,3 +27,11 @@ def test_save_and_load_config_roundtrip(tmp_path, monkeypatch):
     save_config(cfg)
     cfg2 = load_config()
     assert cfg2["tushare_token"] == "abc123"
+
+
+def test_config_persona_mode_default(tmp_path, monkeypatch):
+    monkeypatch.setenv("QUANTKIT_HOME", str(tmp_path))
+    from quantkit.config import load_config
+
+    cfg = load_config()
+    assert cfg["persona_mode"] is False

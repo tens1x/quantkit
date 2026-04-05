@@ -9,6 +9,7 @@ DEFAULTS = {
     "default_capital": 100_000,
     "slippage_bps": 10,
     "commission_bps": 5,
+    "persona_mode": False,
 }
 
 
