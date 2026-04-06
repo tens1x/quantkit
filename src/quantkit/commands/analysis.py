@@ -38,6 +38,11 @@ FACTOR_DISPLAY = {
     "momentum": "Momentum (20d)",
 }
 
+STRATEGIES = {
+    "ma": "MA Cross (5/20)",
+    "dca": "DCA (Monthly)",
+}
+
 
 def cmd_factor(ctx: StockContext) -> None:
     """Display 6-factor analysis table."""
@@ -68,12 +73,10 @@ def cmd_factor(ctx: StockContext) -> None:
 
 def cmd_backtest(ctx: StockContext, args: list[str]) -> None:
     """Run a backtest strategy. Prompts for strategy if not specified."""
-    strategies = {"ma": "MA Cross (5/20)", "dca": "DCA (Monthly)"}
-
-    if args and args[0].lower() in strategies:
+    if args and args[0].lower() in STRATEGIES:
         strategy_key = args[0].lower()
     else:
-        if args and args[0].lower() not in strategies:
+        if args and args[0].lower() not in STRATEGIES:
             console.print(f"[red]未知策略: {args[0]}，可选: ma, dca[/red]")
             return
         console.print("[bold][1][/bold] MA Cross (short/long moving average crossover)")
@@ -81,7 +84,7 @@ def cmd_backtest(ctx: StockContext, args: list[str]) -> None:
         choice = Prompt.ask("请选择策略", choices=["1", "2"], default="1")
         strategy_key = "ma" if choice == "1" else "dca"
 
-    strategy_name = strategies[strategy_key]
+    strategy_name = STRATEGIES[strategy_key]
 
     default_start = (date.today() - timedelta(days=3 * 365)).isoformat()
     default_end = date.today().isoformat()
@@ -101,8 +104,10 @@ def cmd_backtest(ctx: StockContext, args: list[str]) -> None:
 
     if strategy_key == "ma":
         signals = ma_cross_signals(ohlcv, short_window=5, long_window=20)
+        hold_mode = False
     else:
         signals = dca_signals(ohlcv, day_of_month=1)
+        hold_mode = True
 
     result = run_backtest(
         ohlcv,
@@ -110,6 +115,7 @@ def cmd_backtest(ctx: StockContext, args: list[str]) -> None:
         capital=capital,
         slippage_bps=slippage,
         commission_bps=commission,
+        hold_mode=hold_mode,
     )
     metrics = compute_metrics(result["equity_curve"], result["trades"])
 

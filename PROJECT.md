@@ -86,7 +86,7 @@ uv run pytest tests/ -v         # 测试
 - `run_backtest(ohlcv, signals, capital, slippage_bps, commission_bps)` → dict{equity_curve, trades, final_equity}
 - `compute_metrics(equity, trades)` → dict{total_return, annualized_return, sharpe, max_drawdown, win_rate, trade_count}
 - `ma_cross_signals(ohlcv, short_window, long_window)` → Series
-- `low_pe_signals(pe_series, buy_percentile, sell_percentile)` → Series
+- `low_pe_signals(pe_series, buy_percentile, sell_percentile)` → Series（未接入，待实现）
 - `dca_signals(ohlcv, day_of_month)` → Series
 
 ### Risk Engine (`risk/engine.py`)

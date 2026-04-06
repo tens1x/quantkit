@@ -1,15 +1,15 @@
 """Tushare adapter for A-share data."""
 
-import os
-
 import pandas as pd
+
+from quantkit.config import get_tushare_token
 
 
 def _get_api():
     """Get tushare API instance."""
     import tushare as ts
 
-    token = os.environ.get("TUSHARE_TOKEN", "")
+    token = get_tushare_token()
     if not token:
         raise RuntimeError(
             "TUSHARE_TOKEN not set. Get a token at https://tushare.pro "

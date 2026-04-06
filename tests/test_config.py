@@ -35,3 +35,21 @@ def test_config_persona_mode_default(tmp_path, monkeypatch):
 
     cfg = load_config()
     assert cfg["persona_mode"] is False
+
+
+def test_load_config_returns_defaults_when_json_is_invalid(tmp_path, monkeypatch, capsys):
+    monkeypatch.setenv("QUANTKIT_HOME", str(tmp_path / ".quantkit"))
+    config_dir = get_data_dir()
+    (config_dir / "config.json").write_text("{invalid json")
+
+    cfg = load_config()
+
+    assert cfg == {
+        "tushare_token": "",
+        "default_capital": 100_000,
+        "slippage_bps": 10,
+        "commission_bps": 5,
+        "persona_mode": False,
+    }
+    captured = capsys.readouterr()
+    assert "Warning: config file is invalid JSON" in captured.out

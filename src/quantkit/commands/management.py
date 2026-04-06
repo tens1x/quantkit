@@ -22,6 +22,22 @@ if TYPE_CHECKING:
 console = Console()
 
 
+def _ask_int_with_min(label: str, default: int, min_value: int) -> int:
+    """Prompt until the user enters an integer greater than or equal to min_value."""
+    while True:
+        value = IntPrompt.ask(label, default=default)
+        if value >= min_value:
+            return value
+        console.print(f"[red]{label} 必须 >= {min_value}，请重试。[/red]")
+
+
+def _mask_token(token: str) -> str:
+    """Mask a token for display in settings."""
+    if len(token) <= 8:
+        return token
+    return f"{token[:4]}****{token[-4:]}"
+
+
 def cmd_portfolio() -> None:
     """Portfolio management submenu."""
     while True:
@@ -88,7 +104,8 @@ def cmd_settings() -> None:
         table = Table(show_lines=True, box=box.ROUNDED)
         table.add_column("Setting", style="bold")
         table.add_column("Current Value")
-        table.add_row("Tushare Token", cfg.get("tushare_token") or "[dim]not set[/dim]")
+        token = cfg.get("tushare_token", "")
+        table.add_row("Tushare Token", _mask_token(token) if token else "[dim]not set[/dim]")
         table.add_row("Default Capital", f"{cfg['default_capital']:,}")
         table.add_row("Slippage (bps)", str(cfg["slippage_bps"]))
         table.add_row("Commission (bps)", str(cfg["commission_bps"]))
@@ -113,18 +130,26 @@ def cmd_settings() -> None:
             save_config(cfg)
             console.print("[green]Saved.[/green]")
         elif choice == "2":
-            cfg["default_capital"] = IntPrompt.ask(
-                "Default Capital", default=cfg["default_capital"]
+            cfg["default_capital"] = _ask_int_with_min(
+                "Default Capital",
+                default=cfg["default_capital"],
+                min_value=1000,
             )
             save_config(cfg)
             console.print("[green]Saved.[/green]")
         elif choice == "3":
-            cfg["slippage_bps"] = IntPrompt.ask("Slippage (bps)", default=cfg["slippage_bps"])
+            cfg["slippage_bps"] = _ask_int_with_min(
+                "Slippage (bps)",
+                default=cfg["slippage_bps"],
+                min_value=0,
+            )
             save_config(cfg)
             console.print("[green]Saved.[/green]")
         elif choice == "4":
-            cfg["commission_bps"] = IntPrompt.ask(
-                "Commission (bps)", default=cfg["commission_bps"]
+            cfg["commission_bps"] = _ask_int_with_min(
+                "Commission (bps)",
+                default=cfg["commission_bps"],
+                min_value=0,
             )
             save_config(cfg)
             console.print("[green]Saved.[/green]")

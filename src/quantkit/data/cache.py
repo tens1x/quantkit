@@ -40,9 +40,21 @@ class OHLCVCache:
             )
             """
         )
+        self._conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS ohlcv_ranges (
+                symbol TEXT NOT NULL,
+                start_date TEXT NOT NULL,
+                end_date TEXT NOT NULL,
+                PRIMARY KEY (symbol, start_date, end_date)
+            )
+            """
+        )
         self._conn.commit()
 
-    def save_ohlcv(self, symbol: str, df: pd.DataFrame) -> None:
+    def save_ohlcv(
+        self, symbol: str, df: pd.DataFrame, start: str | None = None, end: str | None = None
+    ) -> None:
         """Save OHLCV dataframe to cache."""
         for _, row in df.iterrows():
             self._conn.execute(
@@ -57,10 +69,28 @@ class OHLCVCache:
                     row["volume"],
                 ),
             )
+        if not df.empty:
+            range_start = start or str(df["date"].min())
+            range_end = end or str(df["date"].max())
+            self._conn.execute(
+                "INSERT OR REPLACE INTO ohlcv_ranges VALUES (?, ?, ?)",
+                (symbol, range_start, range_end),
+            )
         self._conn.commit()
+
+    def has_ohlcv_coverage(self, symbol: str, start: str, end: str) -> bool:
+        """Return whether the cache is known to cover the full requested range."""
+        cursor = self._conn.execute(
+            "SELECT 1 FROM ohlcv_ranges "
+            "WHERE symbol = ? AND start_date <= ? AND end_date >= ? LIMIT 1",
+            (symbol, start, end),
+        )
+        return cursor.fetchone() is not None
 
     def load_ohlcv(self, symbol: str, start: str, end: str) -> pd.DataFrame | None:
         """Load OHLCV data from cache. Returns None if no data found."""
+        if not self.has_ohlcv_coverage(symbol, start, end):
+            return None
         cursor = self._conn.execute(
             "SELECT date, open, high, low, close, volume FROM ohlcv "
             "WHERE symbol = ? AND date >= ? AND date <= ? ORDER BY date",

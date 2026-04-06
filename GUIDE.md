@@ -6,18 +6,18 @@
 uv run python -m quantkit
 ```
 
-启动后进入交互模式，提示符为 `> `。
+启动后进入交互模式，提示符为 `❯ `。
 
 ## 基本操作
 
 **输入股票代码** 开始分析：
 
 ```
-> AAPL
+❯ AAPL
 Fetching data for AAPL...
 Done (1y OHLCV (251 bars), fundamentals)
 
-AAPL >
+AAPL ❯
 ```
 
 提示符变为 `AAPL ❯ `，表示当前上下文已加载。之后输入 `/命令` 对该股票进行分析。
@@ -42,7 +42,7 @@ AAPL >
 ## 第一步：导入你的真实持仓
 
 ```
-> /portfolio
+❯ /portfolio
 ```
 
 选择 Import CSV → 输入文件路径。
@@ -56,7 +56,7 @@ AAPL >
 ## 第二步：Factor Check — 给股票做"体检"
 
 ```
-AAPL > /factor
+AAPL ❯ /factor
 ```
 
 每只股票会得到 6 个维度的评分：
@@ -82,9 +82,9 @@ AAPL > /factor
 ## 第三步：Strategy Backtest — 验证你的"直觉"
 
 ```
-AAPL > /backtest ma
-AAPL > /backtest dca
-AAPL > /backtest          # 交互式选择策略
+AAPL ❯ /backtest ma
+AAPL ❯ /backtest dca
+AAPL ❯ /backtest          # 交互式选择策略
 ```
 
 ### 可用策略
@@ -116,7 +116,7 @@ AAPL > /backtest          # 交互式选择策略
 ## 第四步：Risk Lens — 看清全局风险
 
 ```
-> /risk
+❯ /risk
 ```
 
 不需要先选股票，自动分析整个持仓组合。
@@ -144,15 +144,15 @@ AAPL > /backtest          # 交互式选择策略
 先在设置中开启：
 
 ```
-> /settings
+❯ /settings
 ```
 
 选择 Persona Mode → 开启。之后可用 `/guru` 命令：
 
 ```
-AAPL > /guru buffett     # 巴菲特怎么看这只股票
-AAPL > /guru all         # 所有投资人视角
-AAPL > /guru             # 交互式选择投资人
+AAPL ❯ /guru buffett     # 巴菲特怎么看这只股票
+AAPL ❯ /guru all         # 所有投资人视角
+AAPL ❯ /guru             # 交互式选择投资人
 ```
 
 每个投资人有自己的规则集（YAML 定义），系统会用加权评分给出 **买入/观望/回避** 建议和具体理由。

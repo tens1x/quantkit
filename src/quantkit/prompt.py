@@ -12,10 +12,10 @@ from prompt_toolkit.formatted_text import FormattedText
 from prompt_toolkit.styles import Style as PtStyle
 
 from quantkit.commands import COMMANDS
+from quantkit.commands.analysis import STRATEGIES
 from quantkit.config import load_config
 from quantkit.persona.engine import load_personas
 
-STRATEGIES = {"ma": "MA Cross (5/20)", "dca": "DCA (Monthly)"}
 PROMPT_STYLE = PtStyle.from_dict(
     {
         "completion-menu.completion": "bg:#333333 #ffffff",

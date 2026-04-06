@@ -57,3 +57,20 @@ def test_compute_metrics():
     assert "win_rate" in metrics
     assert metrics["trade_count"] == 4
     assert metrics["win_rate"] == 0.75
+
+
+def test_dca_hold_mode_does_not_sell_monthly():
+    ohlcv = _make_ohlcv(90)
+    signals = dca_signals(ohlcv, day_of_month=1)
+
+    result = run_backtest(
+        ohlcv,
+        signals,
+        capital=100_000,
+        slippage_bps=10,
+        commission_bps=5,
+        hold_mode=True,
+    )
+
+    assert len(result["trades"]) == 0
+    assert result["final_equity"] > result["equity_curve"].iloc[0]

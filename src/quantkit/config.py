@@ -29,9 +29,17 @@ def load_config() -> dict:
     path = _config_path()
     cfg = dict(DEFAULTS)
     if path.exists():
-        with open(path) as f:
-            cfg.update(json.load(f))
+        try:
+            with open(path) as f:
+                cfg.update(json.load(f))
+        except json.JSONDecodeError:
+            print(f"Warning: config file is invalid JSON, using defaults: {path}")
     return cfg
+
+
+def get_tushare_token() -> str:
+    """Return the configured Tushare token, falling back to the environment."""
+    return load_config().get("tushare_token") or os.environ.get("TUSHARE_TOKEN", "")
 
 
 def save_config(cfg: dict) -> None:

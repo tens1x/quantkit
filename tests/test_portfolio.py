@@ -185,3 +185,65 @@ def test_detect_and_import_ibkr_csv(tmp_path, monkeypatch):
     assert positions[0]["market"] == "US"
     assert positions[1]["symbol"] == "600519.SH"
     assert positions[1]["market"] == "CN"
+
+
+def test_detect_and_import_ibkr_csv_with_english_buy(tmp_path, monkeypatch):
+    monkeypatch.setenv("QUANTKIT_HOME", str(tmp_path / ".quantkit"))
+    csv_path = tmp_path / "ibkr_en.csv"
+    rows = [
+        ["Statement", "BrokerName"],
+        [
+            "Transaction History",
+            "Header",
+            "Date",
+            "Unused1",
+            "Unused2",
+            "Action",
+            "Symbol",
+            "Quantity",
+            "Price",
+            "Price Currency",
+        ],
+        [
+            "Transaction History",
+            "Data",
+            "2025-12-17",
+            "",
+            "",
+            "Buy",
+            "AAPL",
+            "10",
+            "200.00",
+            "USD",
+        ],
+        [
+            "Transaction History",
+            "Data",
+            "2025-12-18",
+            "",
+            "",
+            "SELL",
+            "TSLA",
+            "5",
+            "300.00",
+            "USD",
+        ],
+    ]
+    with open(csv_path, "w", newline="") as f:
+        writer = csv.writer(f)
+        writer.writerows(rows)
+
+    count, format_name = detect_and_import(csv_path)
+
+    assert count == 1
+    assert format_name == "IBKR"
+    positions = list_positions()
+    assert positions == [
+        {
+            "symbol": "AAPL",
+            "buy_date": "2025-12-17",
+            "buy_price": 200.0,
+            "quantity": 10.0,
+            "market": "US",
+        }
+    ]

@@ -10,6 +10,7 @@ def run_backtest(
     capital: float = 100_000,
     slippage_bps: float = 10,
     commission_bps: float = 5,
+    hold_mode: bool = False,
 ) -> dict:
     """Run a bar-by-bar backtest. Returns equity curve and trade list."""
     closes = ohlcv["close"].values
@@ -38,7 +39,7 @@ def run_backtest(
                 cash -= cost
                 entry_price = exec_price
 
-        elif sigs[i] == 0 and shares > 0:
+        elif sigs[i] == 0 and shares > 0 and not hold_mode:
             # Sell
             exec_price = price * (1 - slip_rate)
             commission = shares * exec_price * comm_rate

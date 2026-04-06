@@ -42,7 +42,7 @@ def get_ohlcv(symbol: str, start: str, end: str) -> pd.DataFrame:
     """Get OHLCV data, using cache when available."""
     cache = _get_cache()
     cached = cache.load_ohlcv(symbol, start, end)
-    if cached is not None:
+    if cached is not None and cache.has_ohlcv_coverage(symbol, start, end):
         return cached
 
     if is_cn_symbol(symbol):
@@ -51,7 +51,7 @@ def get_ohlcv(symbol: str, start: str, end: str) -> pd.DataFrame:
         df = _fetch_yfinance_ohlcv(symbol, start, end)
 
     if not df.empty:
-        cache.save_ohlcv(symbol, df)
+        cache.save_ohlcv(symbol, df, start=start, end=end)
     return df
 
 

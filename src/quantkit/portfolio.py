@@ -71,7 +71,8 @@ def import_ibkr_csv(path: Path) -> int:
                 continue
             if row[0].strip() != "Transaction History" or row[1].strip() != "Data":
                 continue
-            if row[5].strip() != "买":
+            action = row[5].strip().lower()
+            if action not in {"买", "buy"}:
                 continue
 
             market = "US" if row[9].strip() == "USD" else "CN"
