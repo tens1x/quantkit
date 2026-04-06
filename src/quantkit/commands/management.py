@@ -5,9 +5,11 @@ from __future__ import annotations
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from rich import box
 from rich.console import Console
 from rich.panel import Panel
 from rich.prompt import IntPrompt, Prompt
+from rich.rule import Rule
 from rich.table import Table
 
 from quantkit.commands import COMMANDS
@@ -23,7 +25,7 @@ console = Console()
 def cmd_portfolio() -> None:
     """Portfolio management submenu."""
     while True:
-        console.print(Panel("Portfolio Management", style="bold cyan"))
+        console.print(Rule("Portfolio", style="cyan"))
         console.print("[bold][1][/bold] Import CSV")
         console.print("[bold][2][/bold] View positions")
         console.print("[bold][3][/bold] Clear all positions")
@@ -49,7 +51,12 @@ def cmd_portfolio() -> None:
             if not positions:
                 console.print("[dim]No positions yet.[/dim]")
             else:
-                table = Table(title="Positions", show_lines=True)
+                table = Table(
+                    title="Positions",
+                    show_lines=True,
+                    box=box.ROUNDED,
+                    title_style="bold cyan",
+                )
                 table.add_column("Symbol", style="bold")
                 table.add_column("Buy Date")
                 table.add_column("Buy Price", justify="right")
@@ -78,7 +85,7 @@ def cmd_settings() -> None:
     """Settings submenu."""
     while True:
         cfg = load_config()
-        table = Table(show_lines=True)
+        table = Table(show_lines=True, box=box.ROUNDED)
         table.add_column("Setting", style="bold")
         table.add_column("Current Value")
         table.add_row("Tushare Token", cfg.get("tushare_token") or "[dim]not set[/dim]")
@@ -88,7 +95,7 @@ def cmd_settings() -> None:
         persona_status = "[green]ON[/green]" if cfg.get("persona_mode") else "[red]OFF[/red]"
         table.add_row("Persona Mode", persona_status)
 
-        console.print(Panel("Settings", style="bold cyan"))
+        console.print(Rule("Settings", style="cyan"))
         console.print(table)
 
         console.print("\n[bold][1][/bold] Set Tushare Token")
@@ -134,7 +141,8 @@ def cmd_help(ctx: StockContext | None) -> None:
     cfg = load_config()
     persona_enabled = cfg.get("persona_mode", False)
 
-    table = Table(title="Available Commands", show_lines=True)
+    console.print(Rule("Help", style="cyan"))
+    table = Table(show_lines=True, box=box.ROUNDED)
     table.add_column("Command", style="bold")
     table.add_column("Description")
 

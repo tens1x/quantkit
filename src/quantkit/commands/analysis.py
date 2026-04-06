@@ -6,9 +6,11 @@ from datetime import date, timedelta
 from typing import TYPE_CHECKING
 
 import plotext as plt
+from rich import box
 from rich.console import Console
 from rich.panel import Panel
 from rich.prompt import Prompt
+from rich.rule import Rule
 from rich.table import Table
 
 from quantkit.backtest.engine import compute_metrics, run_backtest
@@ -43,7 +45,8 @@ def cmd_factor(ctx: StockContext) -> None:
         console.print("[yellow]基本面数据不可用，部分因子可能显示 N/A[/yellow]")
 
     factors = ctx.get_factors()
-    table = Table(title=f"{ctx.symbol} Factor Check", show_lines=True)
+    console.print(Rule(f"Factor Check: {ctx.symbol}", style="cyan"))
+    table = Table(show_lines=True, box=box.ROUNDED, title_style="bold cyan")
     table.add_column("Factor", style="bold")
     table.add_column("Value", justify="right")
     table.add_column("Status")
@@ -123,7 +126,8 @@ def cmd_backtest(ctx: StockContext, args: list[str]) -> None:
     plt.plot_size(80, 20)
     plt.show()
 
-    table = Table(title="Performance Metrics", show_lines=True)
+    console.print(Rule(f"Backtest: {ctx.symbol} — {strategy_name}", style="cyan"))
+    table = Table(show_lines=True, box=box.ROUNDED, title_style="bold cyan")
     table.add_column("Metric", style="bold")
     table.add_column("Value", justify="right")
     table.add_row("Total Return", f"{metrics['total_return']:.1%}")
@@ -195,9 +199,9 @@ def cmd_risk() -> None:
         )
         return
 
-    console.print("\n[bold underline]1. Concentration[/bold underline]")
+    console.print(Rule("1. Concentration", style="cyan"))
     concentration = compute_concentration(market_values)
-    table = Table(show_lines=True)
+    table = Table(show_lines=True, box=box.ROUNDED)
     table.add_column("Symbol", style="bold")
     table.add_column("Market Value", justify="right")
     table.add_column("Weight", justify="right")
@@ -208,10 +212,10 @@ def cmd_risk() -> None:
     console.print(table)
 
     if len(returns_dict) >= 2:
-        console.print("\n[bold underline]2. Correlation Matrix[/bold underline]")
+        console.print(Rule("2. Correlation Matrix", style="cyan"))
         returns_df = pd.DataFrame(returns_dict)
         correlation = compute_correlation_matrix(returns_df)
-        corr_table = Table(show_lines=True)
+        corr_table = Table(show_lines=True, box=box.ROUNDED)
         corr_table.add_column("")
         for col in correlation.columns:
             corr_table.add_column(str(col), justify="center")
@@ -231,19 +235,19 @@ def cmd_risk() -> None:
         console.print(corr_table)
 
     if len(returns_dict) >= 2:
-        console.print("\n[bold underline]3. Volatility Contribution[/bold underline]")
+        console.print(Rule("3. Volatility Contribution", style="cyan"))
         total_mv = sum(market_values.values())
         weights = {s: mv / total_mv for s, mv in market_values.items()}
         returns_df = pd.DataFrame(returns_dict)
         vol_contrib = compute_volatility_contribution(returns_df, weights)
-        vol_table = Table(show_lines=True)
+        vol_table = Table(show_lines=True, box=box.ROUNDED)
         vol_table.add_column("Symbol", style="bold")
         vol_table.add_column("Contribution", justify="right")
         for sym, data in sorted(vol_contrib.items(), key=lambda x: -x[1]["contribution"]):
             vol_table.add_row(sym, f"{data['contribution']:.1%}")
         console.print(vol_table)
 
-    console.print("\n[bold underline]4. Historical Drawdown[/bold underline]")
+    console.print(Rule("4. Historical Drawdown", style="cyan"))
     returns_df = pd.DataFrame(returns_dict)
     total_mv = sum(market_values.values())
     weights_s = pd.Series({s: market_values[s] / total_mv for s in returns_df.columns})

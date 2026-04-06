@@ -4,9 +4,11 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from rich import box
 from rich.console import Console
 from rich.panel import Panel
 from rich.prompt import Prompt
+from rich.rule import Rule
 from rich.table import Table
 
 from quantkit.persona.engine import evaluate, load_personas
@@ -40,6 +42,7 @@ def _display_verdict(symbol: str, persona_name: str, philosophy: str, verdict) -
             content,
             title=f"{persona_name}视角: {symbol}",
             border_style="cyan",
+            box=box.ROUNDED,
             padding=(1, 2),
         )
     )
@@ -58,6 +61,7 @@ def cmd_guru(ctx: StockContext, args: list[str]) -> None:
         console.print("[yellow]基本面数据不可用，评估结果可能不完整[/yellow]")
 
     factors = ctx.get_factors()
+    console.print(Rule(f"Guru: {ctx.symbol}", style="cyan"))
 
     if args and args[0].lower() == "all":
         selected = personas
@@ -83,7 +87,12 @@ def cmd_guru(ctx: StockContext, args: list[str]) -> None:
             selected = [personas[int(choice) - 1]]
 
     if len(selected) > 5:
-        summary = Table(title=f"{ctx.symbol} — 投资人总览", show_lines=True)
+        summary = Table(
+            title=f"{ctx.symbol} — 投资人总览",
+            show_lines=True,
+            box=box.ROUNDED,
+            title_style="bold cyan",
+        )
         summary.add_column("投资人", style="bold")
         summary.add_column("判断")
         summary.add_column("得分", justify="right")
