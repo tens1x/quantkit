@@ -151,3 +151,67 @@
 - **新增依赖**: prompt-toolkit>=3.0
 - **Tests**: 71 → 90（+19 tests covering completer, auto-suggest, prompt styling）
 - **Commits**: `047e8ac` prompt_toolkit core, `49883d8` visual unification
+
+---
+
+## 2026-04-06（研究）
+
+### 论文研究: The Intramonth Momentum Cycle
+
+- **Who**: Claude Code（研究 + 分析）
+- **What**: 研究 Nathan, Suominen, Tasa (2026) 论文，分析与用户现有 PineScript 策略的关系
+- **关键发现**: 动量收益集中在月末前 6 个交易日（PreTOM 窗口 T-9 到 T-4），由机构 "dash for cash" 驱动。效应在 19 个发达市场可复制，但 A 股不在样本中。
+- **论文笔记**: `research/papers/2026-04-06-intramonth-momentum-cycle.md`
+
+### PineScript 策略分析
+
+- **Who**: Claude Code + Codex（协作分析）
+- **What**: 分析用户提供的 4 个 TradingView PineScript 策略（HKEX:1810 小米、TVC:GOLD 黄金、比亚迪、阳光电源）
+- **发现**: 四个策略共享同一套 G1 框架（Regime Guard + Turtle Breakout + MFE 2-Stage Trail + Vol Targeting + DD Scaling），是改进版海龟交易系统
+
+### PreTOM 日历仓位缩放（小米版）
+
+- **Who**: Claude Code（设计 + 实现）+ Codex（方案评审）
+- **What**: 基于论文发现，在小米策略的 `scale` 链条中加入日历系数。PreTOM 窗口 ×1.15，非窗口 ×0.90。港股 T+2 结算，窗口前移至 T-10 到 T-5。
+- **文件**: `docs/HKEX_preTOM.pine`（本地，不上传 git）
+- **策略文档**: `research/strategies/pretom-calendar-sizing.md`
+- **决策**: 不做入场过滤（会大幅减少信号），用仓位缩放（保留所有信号但倾斜资金分配）
+
+### G1 Dual Engine 融合策略
+
+- **Who**: Claude Code（设计 + 实现）+ Codex（架构设计协作）
+- **触发**: 用户要求融合 G1 框架与 StockTradebyZ B1 策略
+- **What**:
+  - 双引擎入场: Engine A（Donchian 突破）+ Engine B（KDJ 超卖回踩）
+  - 知行线 Regime 替代 EMA200（ZXDKX 有效滞后 ~27 bar vs EMA200 ~100 bar）
+  - 最大量非阴线过滤（排除主力出货）
+  - 保留完整 G1 出场/风控系统
+- **文件**: `docs/G1_DualEngine_AShare.pine`（本地，不上传 git）
+- **策略文档**: `research/strategies/g1-dual-engine.md`
+
+### StockTradebyZ 项目分析
+
+- **Who**: Claude Code + Codex（协作 review）
+- **What**: Review GitHub 项目 SebastienZh/StockTradebyZ（A 股半自动选股系统）
+- **发现**: 量化筛选（KDJ + 知行线 + 周线多排 + 量能确认）→ K 线图生成 → Gemini AI 打分。是选股系统，不是交易系统——与 G1 互补。
+- **借鉴**: KDJ 回踩入场、知行线 Regime、最大量非阴线过滤 → 融入 G1 Dual Engine
+
+### 回测引擎讨论
+
+- **Who**: Claude Code + Codex（方案评审）
+- **决策**: 不替换 QuantKit 现有回测引擎
+- **原因**:
+  - 复杂策略回测在 TradingView (PineScript) 完成，QuantKit 不需要竞争
+  - QuantKit 的回测是教学功能（MA/DCA vs Buy & Hold），现有引擎够用
+  - QuantKit 的差异化价值在因子分析、风险评估、反思流程
+  - 主流框架（vectorbt/backtrader/bt）要么太重、要么过时、要么能力不足
+
+### 关键决策记录
+
+| 决策 | 原因 | 日期 |
+|------|------|------|
+| PineScript 策略文件不上传 git | 个人策略资产，不公开 | 04-06 |
+| 不替换 QuantKit 回测引擎 | TradingView 做复杂回测，QuantKit 做教学回测，各司其职 | 04-06 |
+| PreTOM 用仓位缩放而非入场过滤 | 突破频率已低（31-73 bar），入场过滤会严重减少信号 | 04-06 |
+| 知行线替代 EMA200 | ZXDKX 响应快 3-4 倍，更适合 A 股牛熊转换速度 | 04-06 |
+| A 股策略暂不加 PreTOM | 论文样本不含 A 股，需先验证效应存在 | 04-06 |
