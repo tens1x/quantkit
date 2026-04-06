@@ -109,6 +109,7 @@ quantkit/
 ├── src/quantkit/
 │   ├── __main__.py          # python -m quantkit
 │   ├── cli.py               # Stock-centric REPL（主循环）
+│   ├── prompt.py            # prompt_toolkit 集成（补全/建议/样式）
 │   ├── stock_context.py     # 预加载数据 + 区间管理
 │   ├── config.py            # ~/.quantkit/config.json 管理
 │   ├── portfolio.py         # 持仓管理（CSV/IBKR 导入）
@@ -133,7 +134,7 @@ quantkit/
 │       ├── engine.py        # 规则引擎（加载 YAML + 评估）
 │       └── personas/        # 投资人 YAML 文件
 │           └── buffett.yaml
-├── tests/                   # 71 tests
+├── tests/                   # 90 tests
 ├── research/
 │   ├── papers/              # 论文笔记
 │   ├── strategies/          # 策略想法

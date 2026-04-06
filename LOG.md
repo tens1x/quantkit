@@ -136,3 +136,18 @@
 - **What**: 从 `~/.claude/skills/codex-dev-g/`（ask_dev_g.sh）迁移到 `codex-plugin-cc` 插件
 - **原因**: 旧 dev-g 脚本持续返回截断响应（1-2 行），--session 参数报错，无法正常工作
 - **新工具**: `codex-companion.mjs task --write "prompt"` 模式，稳定可用
+
+### CLI UX Upgrade: prompt_toolkit + 视觉统一
+
+- **Who**: Codex CLI（由 Claude Code 调度）
+- **What**:
+  - 主循环输入层从 Rich Prompt 换为 prompt_toolkit PromptSession
+  - 输入 `/` 自动弹命令补全菜单，参数补全（策略/投资人）
+  - fish-style 灰色建议历史股票代码（SymbolAutoSuggest）
+  - 启动清屏 + 品牌 banner（ROUNDED green Panel）
+  - 所有表格统一 ROUNDED 圆角 + Rule 标题头
+  - 补全菜单深色主题样式
+- **设计文档**: `docs/superpowers/specs/2026-04-06-cli-ux-upgrade-design.md`
+- **新增依赖**: prompt-toolkit>=3.0
+- **Tests**: 71 → 90（+19 tests covering completer, auto-suggest, prompt styling）
+- **Commits**: `047e8ac` prompt_toolkit core, `49883d8` visual unification
