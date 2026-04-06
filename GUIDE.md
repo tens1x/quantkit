@@ -6,19 +6,56 @@
 uv run python -m quantkit
 ```
 
+启动后进入交互模式，提示符为 `> `。
+
+## 基本操作
+
+**输入股票代码** 开始分析：
+
+```
+> AAPL
+Fetching data for AAPL...
+Done (1y OHLCV (251 bars), fundamentals)
+
+AAPL >
+```
+
+提示符变为 `AAPL > `，表示当前上下文已加载。之后输入 `/命令` 对该股票进行分析。
+
+切换股票：直接输入新代码即可（如 `600519.SH`）。
+
+## 命令列表
+
+| 命令 | 用途 | 需要先选股票？ |
+|------|------|---------------|
+| `/factor` | 因子分析（6 维度体检） | 是 |
+| `/backtest [ma\|dca]` | 策略回测 | 是 |
+| `/risk` | 持仓风险分析 | 否 |
+| `/guru [name\|all]` | 投资人视角评估 | 是（需开启） |
+| `/portfolio` | 持仓管理 | 否 |
+| `/settings` | 设置 | 否 |
+| `/help` | 显示可用命令 | 否 |
+| `/exit` | 退出 | 否 |
+
 ## 第一步：导入你的真实持仓
 
-主菜单选 `4` Portfolio → `1` Import CSV → 输入文件路径
+```
+> /portfolio
+```
+
+选择 Import CSV → 输入文件路径。
 
 支持两种格式：
 - **IBKR 导出文件**：直接导入 Interactive Brokers 的 Transaction History，自动识别，仅导入买入交易
 - **QuantKit CSV**：`symbol,buy_date,buy_price,quantity,market`
 
-导入后选 `2` View positions 确认持仓。
+导入后选 View positions 确认持仓。
 
-## 第二步：Factor Check — 给持仓做"体检"
+## 第二步：Factor Check — 给股票做"体检"
 
-主菜单选 `1` Factor Check → `2` All positions
+```
+AAPL > /factor
+```
 
 每只股票会得到 6 个维度的评分：
 
@@ -42,7 +79,11 @@ uv run python -m quantkit
 
 ## 第三步：Strategy Backtest — 验证你的"直觉"
 
-主菜单选 `2` Strategy Backtest
+```
+AAPL > /backtest ma
+AAPL > /backtest dca
+AAPL > /backtest          # 交互式选择策略
+```
 
 ### 可用策略
 
@@ -50,7 +91,6 @@ uv run python -m quantkit
 |------|------|-------------|
 | MA Cross (均线交叉) | 短期均线上穿长期均线买入，下穿卖出 | "追涨杀跌到底赚不赚钱？" |
 | DCA (定投) | 每月固定日买入固定金额 | "不看盘、无脑定投效果如何？" |
-| Low PE (低估值) | PE 低于历史分位数买入 | 暂未支持，敬请期待 |
 
 ### 结果怎么看
 
@@ -73,7 +113,11 @@ uv run python -m quantkit
 
 ## 第四步：Risk Lens — 看清全局风险
 
-主菜单选 `3` Risk Lens，自动分析你的整个组合。
+```
+> /risk
+```
+
+不需要先选股票，自动分析整个持仓组合。
 
 ### 1. 集中度 (Concentration)
 
@@ -93,18 +137,38 @@ uv run python -m quantkit
 
 "基于历史数据，你的组合最多从高点跌多少。" 这个数字就是你需要做好的心理准备。
 
+## 投资人视角（隐藏功能）
+
+先在设置中开启：
+
+```
+> /settings
+```
+
+选择 Persona Mode → 开启。之后可用 `/guru` 命令：
+
+```
+AAPL > /guru buffett     # 巴菲特怎么看这只股票
+AAPL > /guru all         # 所有投资人视角
+AAPL > /guru             # 交互式选择投资人
+```
+
+每个投资人有自己的规则集（YAML 定义），系统会用加权评分给出 **买入/观望/回避** 建议和具体理由。
+
+这不是投资建议——是帮你从不同角度思考。
+
 ## 学习循环
 
 建议每月做一次：
 
 ```
-导入最新持仓
+导入最新持仓（/portfolio）
     ↓
-Factor 体检 → 问自己"我为什么持有这只？理由还成立吗？"
+输入股票代码 → /factor 体检 → 问自己"我为什么持有这只？理由还成立吗？"
     ↓
-Backtest 验证 → "我的交易策略真的有效吗？"
+/backtest 验证 → "我的交易策略真的有效吗？"
     ↓
-Risk Lens 全局 → "我的风险真的分散了吗？"
+/risk 全局 → "我的风险真的分散了吗？"
     ↓
 记录反思 → 写下发现和下一步行动
 ```

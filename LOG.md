@@ -89,3 +89,50 @@
 | PLAN.md 作为行动入口 | 解决"打开项目不知道做什么"的问题 | 04-06 |
 | CLAUDE.md 作为 agent 规范 | 所有 AI agent 读同一份规范，保证一致性 | 04-06 |
 | Ruff 作为 linter | 轻量、快速、够用，不引入重型工具链 | 04-06 |
+| CLI 从菜单驱动改为命令驱动 | 更灵活、更像开发者工具、扩展性好 | 04-06 |
+| Persona 功能作为隐藏彩蛋 | 降低新用户认知负担，进阶用户自行发现 | 04-06 |
+| PyYAML 解析 persona 文件 | 轻量、规则可读、不依赖 LLM | 04-06 |
+
+---
+
+## 2026-04-06（续）
+
+### CLI 重写：菜单驱动 → Stock-centric 命令驱动
+
+- **Who**: Claude Code（设计 + review）+ Codex CLI（实现）
+- **触发**: 用户提出"Investor Persona"功能时，顺带重新设计了整个交互模型
+- **变更**:
+  - 旧模式: 数字菜单导航（主菜单 → 子菜单 → 操作）
+  - 新模式: 输入股票代码 → `/命令` 交互（如 `/factor`, `/backtest ma`, `/guru buffett`）
+  - 新增 `StockContext`：预加载 1y OHLCV + fundamentals，带区间管理和延迟因子缓存
+  - 新增 `commands/` 模块：命令注册表 + 路由 + handler 分离
+  - `cli.py` 从 475 行缩减到 ~60 行（主循环）
+- **设计文档**: `docs/superpowers/specs/2026-04-06-cli-rewrite-persona-design.md`
+- **实施计划**: `docs/superpowers/plans/2026-04-06-cli-rewrite-persona.md`（10 tasks）
+
+### Investor Persona 功能
+
+- **Who**: Claude Code（设计）+ Codex CLI（实现）
+- **What**:
+  - 投资人决策规则蒸馏为 YAML 文件（规则引擎，非 LLM）
+  - 加权评分 → 买入/观望/回避 + 理由列表
+  - `/guru buffett` 单人评估、`/guru all` 全部、`/guru` 交互选择
+  - 隐藏功能：需在 `/settings` 中开启 persona_mode
+- **文件**:
+  - `persona/engine.py` — 规则引擎（加载、校验、评估）
+  - `persona/personas/buffett.yaml` — 巴菲特 persona
+  - `commands/persona_cmd.py` — /guru handler
+- **Commits**:
+  - `44c0bad` feat: add persona_mode config + pyyaml dependency
+  - `c3e44f0` feat: add StockContext with preloaded data and interval tracking
+  - `9e14b10` feat: add persona engine with YAML loading and rule evaluation
+  - `8f0a0b1` feat: rewrite CLI to stock-centric command-driven interface
+  - `30b1307` test: update integration tests for command-driven CLI
+- **Tests**: 37 → 71（+34 tests covering StockContext, persona, commands, routing, integration）
+
+### Codex CLI 工具迁移
+
+- **Who**: 用户
+- **What**: 从 `~/.claude/skills/codex-dev-g/`（ask_dev_g.sh）迁移到 `codex-plugin-cc` 插件
+- **原因**: 旧 dev-g 脚本持续返回截断响应（1-2 行），--session 参数报错，无法正常工作
+- **新工具**: `codex-companion.mjs task --write "prompt"` 模式，稳定可用

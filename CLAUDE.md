@@ -119,9 +119,10 @@ def test_<功能>_<场景>():
 
 ## CLI 规范
 
+- Stock-centric 命令驱动：用户输入股票代码 → `/命令` 交互
 - 所有用户交互通过 `rich.prompt.Prompt`
 - 错误显示用红色 Panel，不暴露 traceback
-- 每个子菜单是 while True 循环，用户选 0 才返回
+- 命令 handler 在 `commands/` 模块中，通过 `route()` 分发
 - 中英混合提示：技术名词英文，操作引导中文
 - 数据获取前显示 "Fetching data for XXX..."
 
